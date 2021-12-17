@@ -9,6 +9,7 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  // GET code (using fetch)
   const fetchMoviesHandler = useCallback(async () => {
     setIsLoading(true);
     setError(null);
@@ -20,39 +21,54 @@ function App() {
         throw new Error("Something Went Wrong!");
       }
       const data = await response.json();
-      console.log(data.results);
-      const transformedMovies = data.results.map((movieObject) => {
-        return {
-          id: movieObject.episode_id,
-          title: movieObject.title,
-          openingText: movieObject.opening_crawl,
-          releaseDate: movieObject.release_date,
-        };
-      });
-      setMovies(transformedMovies);
+      // is an object of objects
+      console.log(data);
+
+      const loadedMovies = [];
+      for (const key in data) {
+        loadedMovies.push({
+          id: key,
+          title: data[key].title,
+          openingText: data[key].openingText,
+          releaseData: data[key].releaseData,
+        });
+      }
+      setMovies(loadedMovies);
     } catch (error) {
       setError(error.message);
     }
     setIsLoading(false);
   }, []);
 
+  // useEffect code
   useEffect(() => {
     fetchMoviesHandler();
   }, [fetchMoviesHandler]);
 
-  const addMovieHandler = (movie) => {
-    console.log(movie);
-  };
+  // POST code (using fetch)
+  async function addMovieHandler(movie) {
+    const response = await fetch(
+      "https://react-http-1db30-default-rtdb.firebaseio.com/movies.json",
+      {
+        method: "POST",
+        body: JSON.stringify(movie),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    const data = response.json();
+    console.log(data);
+  }
 
+  // 3 options to display
   let content = <p>No movies found</p>;
-
   if (movies.length > 0) {
     content = <MoviesList movies={movies} />;
   }
   if (error) {
     content = <p>{error}</p>;
   }
-
   if (isLoading) {
     content = <p>loading...</p>;
   }
